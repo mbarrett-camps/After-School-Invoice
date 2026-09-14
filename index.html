@@ -81,7 +81,40 @@
     grid-template-columns:auto auto;
     gap:6px 16px;
     text-align:right;
+    background:var(--accent-pale);
+    border:1px solid var(--hairline);
+    border-radius:5px;
+    padding:12px 16px;
   }
+  .req-mark{ color:#B3261E; margin-left:2px; font-weight:bold; }
+  input.invalid, textarea.invalid{
+    border-color:#B3261E !important;
+    outline:2px solid #B3261E;
+    outline-offset:1px;
+    background:#FDEDEC !important;
+  }
+  .chk-row.invalid{
+    outline:2px solid #B3261E;
+    outline-offset:6px;
+    border-radius:4px;
+  }
+  .form-warn{
+    display:none;
+    font-family:Helvetica,Arial,sans-serif;
+    font-size:11px;
+    color:#B3261E;
+    margin-top:8px;
+  }
+  .form-warn.show{ display:block; }
+  .meta-warn{
+    display:none;
+    font-family:Helvetica,Arial,sans-serif;
+    font-size:11px;
+    color:#B3261E;
+    text-align:right;
+    margin-top:6px;
+  }
+  .meta-warn.show{ display:block; }
   .meta label{
     font-family:Helvetica,Arial,sans-serif;
     font-size:10.5px;
@@ -231,6 +264,13 @@
     color:var(--accent);
     text-align:right;
   }
+  .total-summary .tot-val{
+    font-weight:normal;
+    color:var(--ink);
+  }
+  .total-summary .tot-label{
+    font-weight:normal;
+  }
 
   /* ---- services table ---- */
   .svc-table th{
@@ -257,7 +297,7 @@
   .svc-table .desc-col{ width:46%; }
   .svc-table .num-col{ width:14%; }
   .svc-table .sub-col{ width:16%; }
-  .svc-table .rm-col{ width:44px; }
+  .svc-table .rm-col{ width:100px; }
   .rm-btn{
     background:none;border:none;color:var(--muted);
     cursor:pointer;font-size:14px;line-height:1;
@@ -292,14 +332,21 @@
     border:none;
     color:var(--muted);
     cursor:pointer;
-    font-size:14px;
+    font-size:11px;
     line-height:1;
     font-family:Helvetica,Arial,sans-serif;
     padding:2px 4px;
   }
-  .row-actions .dup-btn:hover{ color:var(--accent); }
+  .row-actions .dup-btn{
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .row-actions .del-btn, .row-actions .rm-btn{
+    font-size:16px;
+  }
+  .row-actions .dup-btn:hover{ color:var(--accent); text-decoration:underline; }
   .row-actions .del-btn:hover{ color:#a33; }
-  .row-actions-col{ width:44px; }
+  .row-actions-col{ width:100px; }
   @media print{
     .row-actions{ display:none; }
   }
@@ -416,9 +463,12 @@
     <div>
       <p class="org-name">After School Services Invoice</p>
     </div>
-    <div class="meta">
-      <label>Invoice #</label><input type="text" id="invNum" placeholder="—">
-      <label>Date</label><input type="date" id="invDate">
+    <div>
+      <div class="meta">
+        <label>Invoice #<span class="req-mark">*</span></label><input type="text" id="invNum" placeholder="—">
+        <label>Date<span class="req-mark">*</span></label><input type="date" id="invDate">
+      </div>
+      <p class="meta-warn" id="metaWarn">Please enter an Invoice # and Date before printing.</p>
     </div>
   </div>
 
@@ -445,22 +495,24 @@
       <label class="chk-option"><input type="checkbox" value="SAU"> SAU</label>
       <label class="chk-option"><input type="checkbox" value="ORT"> ORT</label>
     </div>
+    <p class="form-warn" id="monthCampusWarn">Please select at least one Invoice Month and one Campus.</p>
   </div>
 
   <div class="section">
     <h2>Vendor &amp; Payment Info</h2>
     <div class="grid2">
       <div>
-        <div class="field"><label>Name (Vendor)</label><input type="text" id="vendorName"></div>
-        <div class="field"><label>Billing Address</label><textarea id="billingAddr" rows="2"></textarea></div>
+        <div class="field"><label>Name (Vendor)<span class="req-mark">*</span></label><input type="text" id="vendorName"></div>
+        <div class="field"><label>Billing Address<span class="req-mark">*</span></label><textarea id="billingAddr" rows="2"></textarea></div>
       </div>
       <div>
-        <div class="field"><label>Phone</label><input type="text" id="phone"></div>
-        <div class="field"><label>Email</label><input type="text" id="email"></div>
-        <div class="field"><label>Account #</label><input type="text" id="acctNum"></div>
-        <div class="field"><label>Routing #</label><input type="text" id="routingNum"></div>
+        <div class="field"><label>Phone<span class="req-mark">*</span></label><input type="text" id="phone"></div>
+        <div class="field"><label>Email<span class="req-mark">*</span></label><input type="text" id="email"></div>
+        <div class="field"><label>Account #<span class="req-mark">*</span></label><input type="text" id="acctNum"></div>
+        <div class="field"><label>Routing #<span class="req-mark">*</span></label><input type="text" id="routingNum"></div>
       </div>
     </div>
+    <p class="form-warn" id="vendorWarn">Please complete all Vendor &amp; Payment Info fields.</p>
   </div>
 
   <div class="section">
@@ -469,8 +521,8 @@
       <thead>
         <tr>
           <th>Date</th>
+          <th>Cost&nbsp;$</th>
           <th>Hrs/Qty</th>
-          <th>Rate&nbsp;$</th>
           <th>Subtotal</th>
           <th class="row-actions-col"></th>
         </tr>
@@ -481,14 +533,15 @@
       <tfoot>
         <tr class="totals-row">
           <td></td>
-          <td class="tot-val" id="totHours">0.00</td>
           <td class="tot-label">Total</td>
+          <td class="tot-val" id="totHours">0.00</td>
           <td class="tot-val" id="totSessions">$0.00</td>
           <td></td>
         </tr>
       </tfoot>
     </table>
     <button class="add-row-btn" id="addSessRow">+ Add session</button>
+    <p class="form-warn" id="sessionsWarn">Please complete every field in each session row (or delete the empty row).</p>
   </div>
 
   <div class="section">
@@ -498,7 +551,7 @@
         <tr>
           <th class="desc-col">Item Description</th>
           <th class="num-col">Cost&nbsp;$</th>
-          <th class="num-col">Hrs</th>
+          <th class="num-col">Hrs/Qty</th>
           <th class="sub-col">Subtotal</th>
           <th class="rm-col"></th>
         </tr>
@@ -514,11 +567,12 @@
       </tfoot>
     </table>
     <button class="add-row-btn" id="addSvcRow">+ Add line item</button>
+    <p class="form-warn" id="servicesWarn">Please complete every field in each line item (or delete the empty row).</p>
   </div>
 
   <div class="section">
     <h2>Total</h2>
-    <table>
+    <table class="total-summary">
       <tbody>
         <tr class="totals-row">
           <td class="tot-label" style="text-align:right;">Instruction Sessions Subtotal</td>
@@ -536,15 +590,16 @@
         </tr>
       </tfoot>
     </table>
+    <p class="form-warn" id="totalWarn">Please enter at least one Instruction Session or Other Service before printing.</p>
 
     <div class="verify-block">
       <label class="verify-check" id="verifyLabel">
         <input type="checkbox" id="verifyCheckbox">
         <span>I verify that the above information is accurate and true.</span>
       </label>
-      <p class="verify-warn" id="verifyWarn">Please check the box above to verify the above information before printing.</p>
+      <p class="verify-warn" id="verifyWarn">Please check the box above and sign below to verify the above information before printing.</p>
       <div class="field" style="max-width:320px; margin-top:10px;">
-        <label>Signature</label>
+        <label>Signature<span class="req-mark">*</span></label>
         <input type="text" id="signature" placeholder="Type your full name">
       </div>
     </div>
@@ -559,31 +614,31 @@
 <script>
 const hoursBody = document.getElementById('hoursBody');
 
-function createHoursRow(dateVal, hrsVal, rateVal){
+function createHoursRow(dateVal, costVal, hrsVal){
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td><input type="date" class="sess-date" value="${dateVal || ''}"></td>
+    <td><input type="number" class="sess-cost" min="0" step="0.01" placeholder="0.00" value="${costVal || ''}"></td>
     <td><input type="number" class="sess-hrs" min="0" step="0.25" placeholder="0" value="${hrsVal || ''}"></td>
-    <td><input type="number" class="sess-rate" min="0" step="0.01" placeholder="0.00" value="${rateVal || ''}"></td>
     <td><div class="computed sess-sub">$0.00</div></td>
     <td class="row-actions">
-      <button type="button" class="dup-btn" title="Duplicate row">&#10064;</button>
+      <button type="button" class="dup-btn" title="Duplicate this row">Duplicate</button>
       <button type="button" class="del-btn" title="Delete row">&times;</button>
     </td>
   `;
 
   const dateEl = tr.querySelector('.sess-date');
+  const costEl = tr.querySelector('.sess-cost');
   const hrsEl  = tr.querySelector('.sess-hrs');
-  const rateEl = tr.querySelector('.sess-rate');
 
   ['input','change'].forEach(evt => {
     hrsEl.addEventListener(evt, recalcHours);
-    rateEl.addEventListener(evt, recalcHours);
+    costEl.addEventListener(evt, recalcHours);
   });
 
   tr.querySelector('.dup-btn').addEventListener('click', () => {
-    // duplicate the hours/rate, leave date blank for the next session's date
-    const newRow = createHoursRow('', hrsEl.value, rateEl.value);
+    // duplicate the cost/hours, leave date blank for the next session's date
+    const newRow = createHoursRow('', costEl.value, hrsEl.value);
     tr.after(newRow);
     recalcHours();
   });
@@ -601,9 +656,9 @@ hoursBody.appendChild(createHoursRow());
 function recalcHours(){
   let totalHrs = 0, totalAmt = 0;
   hoursBody.querySelectorAll('tr').forEach(tr => {
+    const cost = parseFloat(tr.querySelector('.sess-cost').value) || 0;
     const hrs  = parseFloat(tr.querySelector('.sess-hrs').value) || 0;
-    const rate = parseFloat(tr.querySelector('.sess-rate').value) || 0;
-    const sub = hrs * rate;
+    const sub = hrs * cost;
     tr.querySelector('.sess-sub').textContent = '$' + sub.toFixed(2);
     totalHrs += hrs;
     totalAmt += sub;
@@ -620,10 +675,16 @@ document.getElementById('addSessRow').addEventListener('click', () => {
 // ---- auto-fill Invoice # from Date (MMDDYY), stays editable ----
 const invDateEl = document.getElementById('invDate');
 const invNumEl = document.getElementById('invNum');
+const metaWarn = document.getElementById('metaWarn');
 invDateEl.addEventListener('change', () => {
   if(!invDateEl.value) return;
   const [yyyy, mm, dd] = invDateEl.value.split('-');
   invNumEl.value = mm + dd + yyyy.slice(2);
+});
+[invNumEl, invDateEl].forEach(el => {
+  el.addEventListener('input', () => {
+    if(el.value.trim()) el.classList.remove('invalid');
+  });
 });
 
 // ---- services table ----
@@ -643,7 +704,7 @@ function addSvcRow(defaultDesc, fixedCost, placeholderDesc){
     <td><input type="number" class="svc-qty" min="0" step="0.25" placeholder="0"></td>
     <td><div class="computed svc-sub">$0.00</div></td>
     <td class="row-actions">
-      <button type="button" class="dup-btn" title="Duplicate row">&#10064;</button>
+      <button type="button" class="dup-btn" title="Duplicate this row">Duplicate</button>
       <button type="button" class="rm-btn" title="Remove row">&times;</button>
     </td>
   `;
@@ -672,7 +733,7 @@ function addSvcRowAfter(afterTr, desc, cost, qty){
     <td><input type="number" class="svc-qty" min="0" step="0.25" value="${qty || ''}" placeholder="0"></td>
     <td><div class="computed svc-sub">$0.00</div></td>
     <td class="row-actions">
-      <button type="button" class="dup-btn" title="Duplicate row">&#10064;</button>
+      <button type="button" class="dup-btn" title="Duplicate this row">Duplicate</button>
       <button type="button" class="rm-btn" title="Remove row">&times;</button>
     </td>
   `;
@@ -727,21 +788,148 @@ recalcSvc();
 // now that both tables' functions/elements exist, run the initial calculation
 recalcHours();
 
-// ---- verification checkbox + print ----
+// ---- verification checkbox + full-form validation + print ----
 const verifyBlock = document.querySelector('.verify-block');
 const verifyCheckbox = document.getElementById('verifyCheckbox');
+const signatureEl = document.getElementById('signature');
 
 verifyCheckbox.addEventListener('change', () => {
-  if(verifyCheckbox.checked) verifyBlock.classList.remove('unverified');
+  if(verifyCheckbox.checked && signatureEl.value.trim()) verifyBlock.classList.remove('unverified');
+});
+signatureEl.addEventListener('input', () => {
+  signatureEl.classList.remove('invalid');
+  if(verifyCheckbox.checked && signatureEl.value.trim()) verifyBlock.classList.remove('unverified');
 });
 
+// live-clear for the newly-required fields as the user fills them in
+['vendorName','billingAddr','phone','email','acctNum','routingNum'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => { if(el.value.trim()) el.classList.remove('invalid'); });
+});
+[document.getElementById('monthRow'), document.getElementById('campusRow')].forEach(row => {
+  row.addEventListener('change', () => {
+    if(row.querySelectorAll('input:checked').length > 0) row.classList.remove('invalid');
+  });
+});
+
+function clearAllWarnings(){
+  document.querySelectorAll('.form-warn.show').forEach(el => el.classList.remove('show'));
+}
+
 document.getElementById('printBtn').addEventListener('click', () => {
-  if(!verifyCheckbox.checked){
+  clearAllWarnings();
+  let allOk = true;
+  let scrollTarget = null;
+  const markFail = (el) => { allOk = false; if(!scrollTarget) scrollTarget = el; };
+
+  // 1. Invoice # & Date
+  let metaOk = true;
+  [invNumEl, invDateEl].forEach(el => {
+    if(!el.value.trim()){ el.classList.add('invalid'); metaOk = false; }
+    else { el.classList.remove('invalid'); }
+  });
+  if(!metaOk){
+    metaWarn.classList.add('show');
+    markFail(invNumEl);
+  } else {
+    metaWarn.classList.remove('show');
+  }
+
+  // 2. Invoice Month & Campus - at least one checked in each group
+  const monthRow = document.getElementById('monthRow');
+  const campusRow = document.getElementById('campusRow');
+  const monthChecked = monthRow.querySelectorAll('input:checked').length > 0;
+  const campusChecked = campusRow.querySelectorAll('input:checked').length > 0;
+  monthRow.classList.toggle('invalid', !monthChecked);
+  campusRow.classList.toggle('invalid', !campusChecked);
+  if(!monthChecked || !campusChecked){
+    document.getElementById('monthCampusWarn').classList.add('show');
+    markFail(monthRow);
+  }
+
+  // 3. Vendor & Payment Info - all fields required
+  const vendorIds = ['vendorName','billingAddr','phone','email','acctNum','routingNum'];
+  let vendorOk = true;
+  let firstInvalidVendorEl = null;
+  vendorIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el.value.trim()){
+      el.classList.add('invalid');
+      vendorOk = false;
+      if(!firstInvalidVendorEl) firstInvalidVendorEl = el;
+    } else {
+      el.classList.remove('invalid');
+    }
+  });
+  if(!vendorOk){
+    document.getElementById('vendorWarn').classList.add('show');
+    markFail(firstInvalidVendorEl);
+  }
+
+  // 4. Instruction Sessions - any row with some data must be fully filled in
+  let sessionsOk = true;
+  let firstInvalidSessEl = null;
+  hoursBody.querySelectorAll('tr').forEach(tr => {
+    const fields = [tr.querySelector('.sess-date'), tr.querySelector('.sess-cost'), tr.querySelector('.sess-hrs')];
+    const filledCount = fields.filter(el => el.value.trim() !== '').length;
+    if(filledCount > 0 && filledCount < fields.length){
+      fields.forEach(el => {
+        if(!el.value.trim()){
+          el.classList.add('invalid');
+          sessionsOk = false;
+          if(!firstInvalidSessEl) firstInvalidSessEl = el;
+        }
+      });
+    }
+  });
+  if(!sessionsOk){
+    document.getElementById('sessionsWarn').classList.add('show');
+    markFail(firstInvalidSessEl);
+  }
+
+  // 5. Other Services - same partial-row rule (a fully blank row, like the unused "Other" placeholder, is fine)
+  let servicesOk = true;
+  let firstInvalidSvcEl = null;
+  svcBody.querySelectorAll('tr').forEach(tr => {
+    const fields = [tr.querySelector('.svc-desc'), tr.querySelector('.svc-cost'), tr.querySelector('.svc-qty')];
+    const filledCount = fields.filter(el => el.value.trim() !== '').length;
+    if(filledCount > 0 && filledCount < fields.length){
+      fields.forEach(el => {
+        if(!el.value.trim()){
+          el.classList.add('invalid');
+          servicesOk = false;
+          if(!firstInvalidSvcEl) firstInvalidSvcEl = el;
+        }
+      });
+    }
+  });
+  if(!servicesOk){
+    document.getElementById('servicesWarn').classList.add('show');
+    markFail(firstInvalidSvcEl);
+  }
+
+  // 6. At least one billable line (Instruction Session or Other Service) must actually be entered
+  const grandTotalVal = parseFloat(document.getElementById('grandTotal').textContent.replace('$','')) || 0;
+  if(grandTotalVal <= 0){
+    document.getElementById('totalWarn').classList.add('show');
+    markFail(document.getElementById('grandTotal'));
+  }
+
+  // 7. Verification checkbox + signature
+  if(!verifyCheckbox.checked || !signatureEl.value.trim()){
     verifyBlock.classList.add('unverified');
-    verifyBlock.scrollIntoView({behavior:'smooth', block:'center'});
+    if(!signatureEl.value.trim()) signatureEl.classList.add('invalid');
+    markFail(verifyBlock);
   } else {
     verifyBlock.classList.remove('unverified');
+    signatureEl.classList.remove('invalid');
   }
+
+  if(!allOk){
+    scrollTarget.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
   window.print();
 });
 </script>
